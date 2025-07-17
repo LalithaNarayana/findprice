@@ -1,0 +1,61 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Price Predictor</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">Flight Price Predictor</h1>
+        <form id="prediction-form" class="space-y-4">
+            <div>
+                <label for="airline" class="block text-sm font-medium text-gray-700">Airline</label>
+                <select id="airline" name="airline" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    {% for airline in airlines %}
+                        <option value="{{ airline }}">{{ airline }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="duration" class="block text-sm font-medium text-gray-700">Duration (hours)</label>
+                <input type="number" id="duration" name="duration" step="0.1" min="0" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <div>
+                <label for="prediction" class="block text-sm font-medium text-gray-700">Predicted Price</label>
+                <input type="text" id="prediction" name="prediction" readonly class="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-gray-100" placeholder="Predicted price will appear here">
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition duration-200">Predict</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('prediction-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const airline = document.getElementById('airline').value;
+            const duration = document.getElementById('duration').value;
+            const predictionInput = document.getElementById('prediction');
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `airline=${encodeURIComponent(airline)}&duration=${duration}`
+                });
+                const data = await response.json();
+                
+                if (data.error) {
+                    predictionInput.value = 'Error: ' + data.error;
+                } else {
+                    predictionInput.value = `$${data.prediction.toFixed(2)}`;
+                }
+            } catch (error) {
+                predictionInput.value = 'Error: Unable to fetch prediction';
+            }
+        });
+    </script>
+</body>
+</html>
